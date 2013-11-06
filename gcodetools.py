@@ -3587,7 +3587,7 @@ class Gcodetools(inkex.Effect):
 
 		self.OptionParser.add_option("",   "--area-fill-angle",				action="store", type="float", 		dest="area_fill_angle", default="0",					help="Fill area with lines heading this angle")
 		self.OptionParser.add_option("",   "--area-fill-shift",				action="store", type="float", 		dest="area_fill_shift", default="0",					help="Shift the lines by tool d * shift")
-		self.OptionParser.add_option("",   "--area-fill-method",			action="store", type="string", 		dest="area_fill_method", default="zig-zag",					help="Filling method either zig-zag or spiral")
+		self.OptionParser.add_option("",   "--area-fill-method",			action="store", type="string", 		dest="area_fill_method", default="zig-zag",					help="Filling method either zig-zag, scan or spiral")
 
 		self.OptionParser.add_option("",   "--area-find-artefacts-diameter",action="store", type="float", 		dest="area_find_artefacts_diameter", default="1",					help="Artefacts seeking radius")
 		self.OptionParser.add_option("",   "--area-find-artefacts-action",	action="store", type="string",	 	dest="area_find_artefacts_action", default="mark with an arrow",	help="Artefacts action type")
@@ -5032,7 +5032,6 @@ class Gcodetools(inkex.Effect):
 						return
 
 					lines += [ [] ]
-
 					if self.options.area_fill_method == 'zig-zag' :
 						i = b[0] - self.options.area_fill_shift*r
 						top = True
@@ -5041,15 +5040,24 @@ class Gcodetools(inkex.Effect):
 							if i>=b[2] : last_one = False
 							if lines[-1] == [] :
 								lines[-1] += [  [i,b[3]]  ]
-
 							if top :
-								lines[-1] += [ [i,b[1]],[i+r,b[1]] ]
-
+									lines[-1] += [ [i,b[1]],[i+r,b[1]] ]
 							else :
 									lines[-1] += [ [i,b[3]], [i+r,b[3]] ]
-
 							top = not top
+ 						i += r
+
+					elif self.options.area_fill_method == 'scan' :
+						i = b[0] - self.options.area_fill_shift*r
+						toggle = True
+						while (i<b[2] ) :
+							if toggle :
+								lines[-1] += [ [i,b[1]],[i,b[3]],[i+r,b[3]] ]
+							else :
+								lines[-1] += [ [i,b[3]],[i,b[1]],[i+r,b[1]] ]
+							toggle = not toggle
 							i += r
+
 					else :
 					
 						w, h  = b[2]-b[0] + self.options.area_fill_shift*r , b[3]-b[1] +  self.options.area_fill_shift*r
